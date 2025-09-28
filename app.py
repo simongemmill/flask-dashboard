@@ -7,8 +7,7 @@ import redis
 import os
 
 app = Flask(__name__)
-CORS(app)  # Allow frontend hosted on WordPress to connect
-
+CORS(app)  # Allow WordPress frontend to connect
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 
 # Load Redis URI from secret file
@@ -34,33 +33,59 @@ state = {
 }
 
 unit = 1.0
+updatesPaused = False  # Global control flag
 
 @app.route('/')
 def index():
     return "Backend is running"
 
+@app.route('/start', methods=['GET'])
+def start_route():
+    global updatesPaused
+    updatesPaused = False
+    return "Updates resumed"
+
+@app.route('/pause', methods=['GET'])
+def pause_route():
+    global updatesPaused
+    updatesPaused = True
+    return "Updates paused"
+
+@app.route('/reset', methods=['GET'])
+def reset_route():
+    state["timeline"] = 0.0
+    return "Timeline reset"
+
 def background_task():
     while True:
-        state["timeline"] += 4.0
-        state["timeline"] -= 1.5
-        state["timeline"] += 1.0
-        for _ in range(3):
-            state["timeline"] -= 0.001
-        state["timeline"] += 5 * unit
+        if not updatesPaused:
+            # Timeline logic
+            state["timeline"] += 4.0
+            state["timeline"] -= 1.5
+            state["timeline"] += 1.0
+            for _ in range(3):
+                state["timeline"] -= 0.001
+            state["timeline"] += 5 * unit
 
-        state["yen_counter"] += state["timeline"]
-        state["yo_counter"] += 1_000_000 * unit
-        state["p_balance"] += 9.0
-        state["ten_balance"] += 9.0
-        state["ten_balance"] *= 1.15
+            # Counter updates
+            state["yen_counter"] += state["timeline"]
+            state["yo_counter"] += 1_000_000 * unit
 
-        socketio.emit("state_update", state)
+            # Balance updates
+            state["p_balance"] += 9.0
+            state["ten_balance"] += 9.0
+            state["ten_balance"] *= 1.15
 
-        if redis_client:
-            redis_client.set("latest_timeline", state["timeline"])
+            # Emit to frontend
+            socketio.emit("state_update", state)
+
+            # Save to Redis
+            if redis_client:
+                redis_client.set("latest_timeline", state["timeline"])
 
         time.sleep(1)
 
+# Start background thread
 threading.Thread(target=background_task, daemon=True).start()
 
 if __name__ == '__main__':
