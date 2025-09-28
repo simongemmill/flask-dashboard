@@ -59,4 +59,5 @@ threading.Thread(target=background_task, daemon=True).start()
 
 if __name__ == '__main__':
 
-    socketio.run(app, host='127.0.0.1', port=5001, debug=True)
+    socketio.run(app, host='127.0.0.1', port=32, debug=True)
+
