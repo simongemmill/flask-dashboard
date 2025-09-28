@@ -1,137 +1,97 @@
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-<script>
-  const socket = io();
-
-  socket.on("state_update", function(data) {
-    const timeline = data.timeline || 0;
-    const percent = Math.min(100, (timeline % 100).toFixed(2));
-    document.getElementById("loadingBar").style.width = percent + "%";
-    document.getElementById("statusLabel").textContent = `Timeline: ${timeline.toFixed(2)} | Progress: ${percent}%`;
-  });
-
-  socket.on("ding_event", function(data) {
-    alert(data.msg + " at timeline " + data.timeline.toFixed(2));
-  });
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Status Dashboard</title>
-  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <meta charset="UTF-8" />
+  <title>Live Dashboard</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f4f4f4;
+      background: linear-gradient(to right, #1e3c72, #2a5298);
+      color: white;
+      text-align: center;
+      padding: 2rem;
     }
-    h1 {
-      color: #333;
-    }
-    .bar-container {
-      width: 100%;
-      background: #ddd;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 10px;
-    }
-    .bar {
+    .progress-bar {
+      width: 80%;
       height: 30px;
+      background: #444;
+      border-radius: 15px;
+      margin: 1rem auto;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(to right, #00c6ff, #0072ff);
       width: 0%;
-      background: linear-gradient(to right, #4caf50, #81c784);
       transition: width 0.5s ease;
     }
-    .label {
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-    .controls {
-      margin-bottom: 20px;
-    }
-    button {
-      padding: 10px 20px;
-      margin-right: 10px;
+    .controls button {
+      margin: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
       border: none;
       border-radius: 5px;
-      background: linear-gradient(to right, #2196f3, #64b5f6);
+      background: #00c6ff;
       color: white;
       cursor: pointer;
-      font-weight: bold;
     }
-    button:hover {
-      background: linear-gradient(to right, #1976d2, #42a5f5);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-    }
-    th, td {
-      padding: 8px;
-      border: 1px solid #ccc;
-      text-align: left;
-    }
-    th {
-      background: #eeeeee;
+    .event-log {
+      margin-top: 2rem;
+      max-height: 200px;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1rem;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>Status Dashboard</h1>
-
-  <div class="bar-container">
-    <div class="bar" id="loadingBar"></div>
+  <h1>Live Dashboard</h1>
+  <p>Timeline: <span id="timeline">0</span></p>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress"></div>
   </div>
-  <div class="label" id="statusLabel">Timeline: 0 | Progress: 0%</div>
 
   <div class="controls">
+    <button onclick="startUpdates()">Start</button>
     <button onclick="pauseUpdates()">Pause</button>
-    <button onclick="resumeUpdates()">Resume</button>
+    <button onclick="resetTimeline()">Reset</button>
   </div>
 
-  <h2>Event Log</h2>
-  <table id="eventLog">
-    <thead>
-      <tr>
-        <th>Timestamp</th>
-        <th>Event</th>
-        <th>Details</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <div class="event-log" id="eventLog"></div>
 
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <script>
-    const socket = io();
-    let updatesPaused = false;
+    const socket = io("https://dashboard.ptquiz.co.uk");
 
-    function pauseUpdates() {
-      updatesPaused = true;
-    }
-
-    function resumeUpdates() {
-      updatesPaused = false;
-    }
-
-    function logEvent(type, details) {
-      const table = document.getElementById("eventLog").querySelector("tbody");
-      const row = document.createElement("tr");
-      const timestamp = new Date().toLocaleTimeString();
-      row.innerHTML = `<td>${timestamp}</td><td>${type}</td><td>${details}</td>`;
-      table.prepend(row);
-    }
-
-    socket.on("state_update", function(data) {
-      if (updatesPaused) return;
-
-      const timeline = data.timeline || 0;
-      const percent = Math.min(100, (timeline % 100).toFixed(2));
-      document.getElementById("loadingBar").style.width = percent + "%";
-      document.getElementById("statusLabel").textContent = `Timeline: ${timeline.toFixed(2)} | Progress: ${percent}%`;
-
-      logEvent("State Update", `Timeline: ${timeline.toFixed(2)}, Yen: ${data.yen_counter.toFixed(2)}`);
+    socket.on("state_update", (data) => {
+      document.getElementById("timeline").textContent = data.timeline.toFixed(2);
+      const progress = Math.min((data.timeline / 100), 1) * 100;
+      document.getElementById("progress").style.width = progress + "%";
+      logEvent("Update", `Timeline: ${data.timeline.toFixed(2)} | Progress: ${progress.toFixed(1)}%`);
     });
 
-    // 👇 Removed ding_event listener
+    function startUpdates() {
+      fetch("https://dashboard.ptquiz.co.uk/start")
+        .then(() => logEvent("Control", "Updates resumed"));
+    }
+
+    function pauseUpdates() {
+      fetch("https://dashboard.ptquiz.co.uk/pause")
+        .then(() => logEvent("Control", "Updates paused"));
+    }
+
+    function resetTimeline() {
+      fetch("https://dashboard.ptquiz.co.uk/reset")
+        .then(() => logEvent("Control", "Timeline reset"));
+    }
+
+    function logEvent(type, message) {
+      const log = document.getElementById("eventLog");
+      const entry = document.createElement("div");
+      entry.textContent = `[${type}] ${message}`;
+      log.prepend(entry);
+    }
   </script>
 </body>
 </html>
