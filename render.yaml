@@ -1,3 +1,9 @@
+envVarGroups:
+  - name: dashboard-env
+    envVars:
+      - key: REDIS_URL
+        value: redis://red-d3cfita4d50c73cgu7kg:6379
+
 services:
   - type: web
     name: flask-dashboard
@@ -9,6 +15,5 @@ services:
     buildCommand: ""
     startCommand: gunicorn --worker-class eventlet -w 1 app:app
     envVars:
-      - key: REDIS_URL
-        value: redis://red-d3cfita4d50c73cgu7kg:6379
+      - fromGroup: dashboard-env
     autoDeploy: true
