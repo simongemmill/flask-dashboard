@@ -1,0 +1,137 @@
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script>
+  const socket = io();
+
+  socket.on("state_update", function(data) {
+    const timeline = data.timeline || 0;
+    const percent = Math.min(100, (timeline % 100).toFixed(2));
+    document.getElementById("loadingBar").style.width = percent + "%";
+    document.getElementById("statusLabel").textContent = `Timeline: ${timeline.toFixed(2)} | Progress: ${percent}%`;
+  });
+
+  socket.on("ding_event", function(data) {
+    alert(data.msg + " at timeline " + data.timeline.toFixed(2));
+  });
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Status Dashboard</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+    h1 {
+      color: #333;
+    }
+    .bar-container {
+      width: 100%;
+      background: #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .bar {
+      height: 30px;
+      width: 0%;
+      background: linear-gradient(to right, #4caf50, #81c784);
+      transition: width 0.5s ease;
+    }
+    .label {
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .controls {
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      margin-right: 10px;
+      border: none;
+      border-radius: 5px;
+      background: linear-gradient(to right, #2196f3, #64b5f6);
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: linear-gradient(to right, #1976d2, #42a5f5);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+    th, td {
+      padding: 8px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    th {
+      background: #eeeeee;
+    }
+  </style>
+</head>
+<body>
+  <h1>Status Dashboard</h1>
+
+  <div class="bar-container">
+    <div class="bar" id="loadingBar"></div>
+  </div>
+  <div class="label" id="statusLabel">Timeline: 0 | Progress: 0%</div>
+
+  <div class="controls">
+    <button onclick="pauseUpdates()">Pause</button>
+    <button onclick="resumeUpdates()">Resume</button>
+  </div>
+
+  <h2>Event Log</h2>
+  <table id="eventLog">
+    <thead>
+      <tr>
+        <th>Timestamp</th>
+        <th>Event</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const socket = io();
+    let updatesPaused = false;
+
+    function pauseUpdates() {
+      updatesPaused = true;
+    }
+
+    function resumeUpdates() {
+      updatesPaused = false;
+    }
+
+    function logEvent(type, details) {
+      const table = document.getElementById("eventLog").querySelector("tbody");
+      const row = document.createElement("tr");
+      const timestamp = new Date().toLocaleTimeString();
+      row.innerHTML = `<td>${timestamp}</td><td>${type}</td><td>${details}</td>`;
+      table.prepend(row);
+    }
+
+    socket.on("state_update", function(data) {
+      if (updatesPaused) return;
+
+      const timeline = data.timeline || 0;
+      const percent = Math.min(100, (timeline % 100).toFixed(2));
+      document.getElementById("loadingBar").style.width = percent + "%";
+      document.getElementById("statusLabel").textContent = `Timeline: ${timeline.toFixed(2)} | Progress: ${percent}%`;
+
+      logEvent("State Update", `Timeline: ${timeline.toFixed(2)}, Yen: ${data.yen_counter.toFixed(2)}`);
+    });
+
+    // 👇 Removed ding_event listener
+  </script>
+</body>
+</html>
