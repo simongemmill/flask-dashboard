@@ -1,5 +1,7 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
+from flask_cors import CORS
+CORS(app)
 import threading
 import time
 import redis
@@ -71,3 +73,4 @@ threading.Thread(target=background_task, daemon=True).start()
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=10000)
+
