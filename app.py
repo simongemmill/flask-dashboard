@@ -3,17 +3,28 @@ from flask_socketio import SocketIO, emit
 import threading
 import time
 import redis
-
-# Connect to Redis using your URI
-redis_client = redis.Redis.from_url("redis://red-d3cfita4d50c73cgu7kg:6379")
-
-# Example usage
-redis_client.set("dashboard_status", "active")
-status = redis_client.get("dashboard_status").decode("utf-8")
-print("Redis status:", status)
+import os
 
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode='threading')
+
+# Load Redis URI from secret file
+def load_redis_uri():
+    try:
+        with open("/etc/secrets/Redris.env") as f:
+            return f.read().strip()
+    except Exception as e:
+        print("Failed to load Redis URI:", e)
+        return None
+
+redis_uri = load_redis_uri()
+redis_client = redis.Redis.from_url(redis_uri) if redis_uri else None
+
+# Example Redis usage
+if redis_client:
+    redis_client.set("dashboard_status", "active")
+    status = redis_client.get("dashboard_status").decode("utf-8")
+    print("Redis status:", status)
 
 # Initial state
 state = {
@@ -27,8 +38,9 @@ state = {
 
 unit = 1.0
 
+@app.route('/')
 def index():
-    return render_template('index.html')  # Make sure this file is in /templates
+    return render_template('index.html')  # Served from /templates
 
 def background_task():
     while True:
@@ -58,6 +70,4 @@ def background_task():
 threading.Thread(target=background_task, daemon=True).start()
 
 if __name__ == '__main__':
-
-    socketio.run(app, host='127.0.0.1', port=32, debug=True)
-
+    socketio.run(app, host='0.0.0.0', port=10000)
