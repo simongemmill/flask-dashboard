@@ -1,4 +1,3 @@
-version: "1"
 services:
   - type: web
     name: flask-dashboard
@@ -11,5 +10,5 @@ services:
     startCommand: gunicorn --worker-class eventlet -w 1 app:app
     envVars:
       - key: REDIS_URL
-        fromFile: Redris.env
+        value: redis://red-d3cfita4d50c73cgu7kg:6379
     autoDeploy: true
