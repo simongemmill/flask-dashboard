@@ -2,6 +2,15 @@ from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 import threading
 import time
+import redis
+
+# Connect to Redis using your URI
+redis_client = redis.Redis.from_url("redis://red-d3cfita4d50c73cgu7kg:6379")
+
+# Example usage
+redis_client.set("dashboard_status", "active")
+status = redis_client.get("dashboard_status").decode("utf-8")
+print("Redis status:", status)
 
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode='threading')
@@ -49,4 +58,5 @@ def background_task():
 threading.Thread(target=background_task, daemon=True).start()
 
 if __name__ == '__main__':
+
     socketio.run(app, host='127.0.0.1', port=5001, debug=True)
