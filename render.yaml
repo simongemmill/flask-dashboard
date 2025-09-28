@@ -1,12 +1,11 @@
-# Exported from Render on 2025-09-28T07:41:32Z
 version: "1"
 services:
-- type: web
-  name: https://github.com/simongemmill/flask-dashboard
-  runtime: python
-  repo: https://github.com/simongemmill/simongemmill
-  plan: free
-  region: oregon
-  buildCommand: gunicorn app:app
-  startCommand: gunicorn --worker-class eventlet -w 1 app:app
-  autoDeployTrigger: commit
+  - type: web
+    name: flask-dashboard
+    runtime: python
+    repo: https://github.com/simongemmill/flask-dashboard
+    plan: free
+    region: oregon
+    buildCommand: ""
+    startCommand: gunicorn --worker-class eventlet -w 1 app:app
+    autoDeploy: true
