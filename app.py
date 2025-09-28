@@ -89,4 +89,5 @@ def background_task():
 threading.Thread(target=background_task, daemon=True).start()
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=10000)
+    socketio.run(app, host='3.134.238.10', port=32)
+
