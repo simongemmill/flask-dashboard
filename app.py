@@ -16,7 +16,7 @@ def load_redis_uri():
         with open("/etc/secrets/redis.env") as f:
             return f.read().strip()
     except Exception as e:
-        print("❌ Failed to load Redis URI:", e)
+        print("Failed to load Redis URI:", e)
         return None
 
 redis_uri = load_redis_uri()
@@ -99,4 +99,3 @@ threading.Thread(target=background_task, daemon=True).start()
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=10000)
-
