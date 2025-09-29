@@ -3,9 +3,10 @@ services:
     name: flask-dashboard
     env: python
     plan: free
-    repo: https://github.com/simongemmill/flask-dashboard
+    repo: https://github.com/simongemmill/
     branch: main
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: gunicorn app:app --worker-class eventlet -b 0.0.0.0:10000
+
     envVars:
       - fromGroup: dashboard-env
