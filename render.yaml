@@ -1,21 +1,11 @@
-version: "1"
-projects:
-- name: ptquiz
-  environments:
-  - name: Production
-    services:
-    - type: web
-      name: flask-dashboard
-      runtime: static
-      repo: https://github.com/simongemmill/flask-dashboard
-      envVars:
-      - key: .env
-        sync: false
-      - key: red-d3cfita4d50c73cgu7kg
-        sync: false
-      - fromGroup: https://flask-dashboard-6gef.onrender.com
+services:
+  - type: web
+    name: flask-dashboard
+    env: python
+    plan: free
+    repo: https://github.com/simongemmill/flask-dashboard
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
       - fromGroup: dashboard-env
-      - fromGroup: dashboard-env-6web
-      buildCommand: pip install -r requirements.txt
-      staticPublishPath: frontend/build
-      autoDeployTrigger: commit
