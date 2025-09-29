@@ -1,4 +1,3 @@
-# Exported from Render on 2025-09-29T17:11:17Z
 version: "1"
 projects:
 - name: ptquiz
@@ -7,16 +6,12 @@ projects:
     services:
     - type: web
       name: flask-dashboard
-      runtime: static
+      runtime: python
       repo: https://github.com/simongemmill/flask-dashboard
-      envVars:
-      - key: .env
-        sync: false
-      - key: red-d3cfita4d50c73cgu7kg
-        sync: false
-      - fromGroup: https://flask-dashboard-6gef.onrender.com
-      - fromGroup: dashboard-env
-      - fromGroup: dashboard-env-6web
+      branch: main
       buildCommand: pip install -r requirements.txt
-      staticPublishPath: frontend/build
-      autoDeployTrigger: commit
+      startCommand: gunicorn app:app
+      envVars:
+        - key: REDIS_URL
+          sync: false
+        - fromGroup: dashboard-env
