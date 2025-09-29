@@ -37,7 +37,7 @@ updatesPaused = False
 
 @app.route("/")
 def home():
-    return "✅ Flask dashboard backend is running"
+    return "Flask dashboard backend is running"
 
 @app.route("/start", methods=["POST"])
 def start():
@@ -91,7 +91,7 @@ def background_task():
             time.sleep(1)
 
         except Exception as e:
-            print("⚠️ Background task error:", e)
+            print("Background task error:", e)
             time.sleep(2)
 
 # Start background thread
@@ -99,3 +99,4 @@ threading.Thread(target=background_task, daemon=True).start()
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=10000)
+
