@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import threading
@@ -7,16 +7,16 @@ import redis
 import os
 
 app = Flask(__name__)
-CORS(app)  # Allow WordPress frontend to connect
+CORS(app)
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 
-# Load Redis URI from secret file
+# Load Redis URI from Render Secret File
 def load_redis_uri():
     try:
-        with open("/etc/secrets/Redris.env") as f:
+        with open("/etc/secrets/redis.env") as f:
             return f.read().strip()
     except Exception as e:
-        print("Failed to load Redis URI:", e)
+        print("❌ Failed to load Redis URI:", e)
         return None
 
 redis_uri = load_redis_uri()
@@ -33,61 +33,69 @@ state = {
 }
 
 unit = 1.0
-updatesPaused = False  # Global control flag
+updatesPaused = False
 
-@app.route('/')
-def index():
-    return "Backend is running"
+@app.route("/")
+def home():
+    return "✅ Flask dashboard backend is running"
 
-@app.route('/start', methods=['GET'])
-def start_route():
+@app.route("/start", methods=["POST"])
+def start():
     global updatesPaused
     updatesPaused = False
-    return "Updates resumed"
+    return jsonify({"status": "started"})
 
-@app.route('/pause', methods=['GET'])
-def pause_route():
+@app.route("/pause", methods=["POST"])
+def pause():
     global updatesPaused
     updatesPaused = True
-    return "Updates paused"
+    return jsonify({"status": "paused"})
 
-@app.route('/reset', methods=['GET'])
-def reset_route():
+@app.route("/reset", methods=["POST"])
+def reset():
     state["timeline"] = 0.0
-    return "Timeline reset"
+    return jsonify({"status": "reset"})
+
+@app.route("/status", methods=["GET"])
+def status():
+    return jsonify({"status": "paused" if updatesPaused else "running"})
 
 def background_task():
     while True:
-        if not updatesPaused:
-            # Timeline logic
-            state["timeline"] += 4.0
-            state["timeline"] -= 1.5
-            state["timeline"] += 1.0
-            for _ in range(3):
-                state["timeline"] -= 0.001
-            state["timeline"] += 5 * unit
+        try:
+            if not updatesPaused:
+                # Timeline logic
+                state["timeline"] += 4.0
+                state["timeline"] -= 1.5
+                state["timeline"] += 1.0
+                for _ in range(3):
+                    state["timeline"] -= 0.001
+                state["timeline"] += 5 * unit
 
-            # Counter updates
-            state["yen_counter"] += state["timeline"]
-            state["yo_counter"] += 1_000_000 * unit
+                # Counter updates
+                state["yen_counter"] += state["timeline"]
+                state["yo_counter"] += 1_000_000 * unit
 
-            # Balance updates
-            state["p_balance"] += 9.0
-            state["ten_balance"] += 9.0
-            state["ten_balance"] *= 1.15
+                # Balance updates
+                state["p_balance"] += 9.0
+                state["ten_balance"] += 9.0
+                state["ten_balance"] *= 1.15
 
-            # Emit to frontend
-            socketio.emit("state_update", state)
+                # Emit to frontend
+                socketio.emit("state_update", state)
 
-            # Save to Redis
-            if redis_client:
-                redis_client.set("latest_timeline", state["timeline"])
+                # Save to Redis
+                if redis_client:
+                    redis_client.set("latest_timeline", state["timeline"])
 
-        time.sleep(1)
+            time.sleep(1)
+
+        except Exception as e:
+            print("⚠️ Background task error:", e)
+            time.sleep(2)
 
 # Start background thread
 threading.Thread(target=background_task, daemon=True).start()
 
-if __name__ == '__main__':
-    socketio.run(app, host='3.134.238.10', port=32)
-
+if __name__ == "__main__":
+    socketio.run(app, host="0.0.0.0", port=10000)
