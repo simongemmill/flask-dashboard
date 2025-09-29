@@ -1,19 +1,22 @@
-envVarGroups:
-  - name: dashboard-env
-    envVars:
-      - key: REDIS_URL
-        value: redis://red-d3cfita4d50c73cgu7kg:6379
-
-services:
-  - type: web
-    name: flask-dashboard
-    runtime: python
-    repo: https://github.com/simongemmill/flask-dashboard
-    branch: main
-    plan: free
-    region: oregon
-    buildCommand: ""
-    startCommand: gunicorn --worker-class eventlet -w 1 app:app
-    envVars:
+# Exported from Render on 2025-09-29T17:11:17Z
+version: "1"
+projects:
+- name: ptquiz
+  environments:
+  - name: Production
+    services:
+    - type: web
+      name: flask-dashboard
+      runtime: static
+      repo: https://github.com/simongemmill/flask-dashboard
+      envVars:
+      - key: .env
+        sync: false
+      - key: red-d3cfita4d50c73cgu7kg
+        sync: false
+      - fromGroup: https://flask-dashboard-6gef.onrender.com
       - fromGroup: dashboard-env
-    autoDeploy: true
+      - fromGroup: dashboard-env-6web
+      buildCommand: pip install -r requirements.txt
+      staticPublishPath: frontend/build
+      autoDeployTrigger: commit
