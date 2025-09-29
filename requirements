@@ -1,7 +1,0 @@
-flask
-flask-socketio
-eventlet
-redis
-gunicorn
-flask-cors
-
