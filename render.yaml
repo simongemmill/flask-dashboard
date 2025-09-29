@@ -17,4 +17,3 @@ jobs:
           api_key: ${{ secrets.red-d3cfita4d50c73cgu7kg }}
           github_deployment: true
           deployment_environment: production
-
