@@ -1,17 +1,19 @@
-version: "1"
-projects:
-- name: ptquiz
-  environments:
-  - name: Production
-    services:
-    - type: web
-      name: flask-dashboard
-      runtime: python
-      repo: https://github.com/simongemmill/flask-dashboard
-      branch: main
-      buildCommand: pip install -r requirements.txt
-      startCommand: gunicorn app:app
-      envVars:
-        - key: REDIS_URL
-          sync: false
-        - fromGroup: dashboard-env
+name: Auto Deploy to Render
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy to Render
+        uses: JorgeLNJunior/render-deploy@v1.4.5
+        with:
+          service_id: ${{ secrets.RENDER_SERVICE_ID }}
+          api_key: ${{ secrets.RENDER_API_KEY }}
+          github_deployment: true
+          deployment_environment: production
