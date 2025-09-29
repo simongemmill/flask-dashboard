@@ -7,6 +7,7 @@ import redis
 import os
 
 app = Flask(__name__)
+startCommand: gunicorn main:app --worker-class eventlet -b 0.0.0.0:10000
 CORS(app)
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 
